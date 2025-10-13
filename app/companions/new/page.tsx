@@ -1,5 +1,9 @@
 const NewCompanion = () => {
-  return <div></div>;
+  return (
+    <main>
+      <section></section>
+    </main>
+  );
 };
 
 export default NewCompanion;
