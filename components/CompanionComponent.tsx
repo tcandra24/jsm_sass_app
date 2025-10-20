@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { cn, getSubjectColor } from "@/lib/utils";
+import { cn, configureAssistant, getSubjectColor } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
@@ -62,9 +62,27 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
     setIsMuted(!isMuted);
   };
 
-  const handleCall = () => {};
+  const handleCall = () => {
+    setCallStatus(CallStatus.CONNECTING);
 
-  const handleDisconnect = () => {};
+    const assistantOverride = {
+      variableValues: {
+        subject,
+        topic,
+        style,
+      },
+      clientMessages: ["transcript"],
+      serverMessage: [],
+    };
+
+    // @ts-expect-error ----
+    vapi.start(configureAssistant(voice, style), assistantOverride);
+  };
+
+  const handleDisconnect = () => {
+    setCallStatus(CallStatus.FINISHED);
+    vapi.stop();
+  };
 
   return (
     <section className="flex flex-col h-[70vh]">
