@@ -18,6 +18,7 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [messages, setMessages] = useState<SavedMessage[]>([]);
 
   const lottieRef = useRef<LottieRefCurrentProps>(null);
 
@@ -34,7 +35,16 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
     const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
-    const onMessage = () => {};
+    const onMessage = (message: Message) => {
+      if (message.type === "transcript" && message.transcriptType === "final") {
+        const newMessage = {
+          role: message.role,
+          content: message.transcript,
+        };
+
+        setMessages((prev) => [newMessage, ...prev]);
+      }
+    };
     const onSpeechStart = () => setIsSpeaking(true);
     const onSpeechEnd = () => setIsSpeaking(false);
     const onError = (error: Error) => console.log("Error", error);
@@ -72,7 +82,6 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
         style,
       },
       clientMessages: ["transcript"],
-      serverMessage: [],
     };
 
     // @ts-expect-error ----
@@ -103,7 +112,7 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
             <Image src={userImage} alt={userName} height={130} width={130} className="rounded-lg" />
             <p className="font-bold text-2xl">{userName}</p>
           </div>
-          <button className="btn-mic" onClick={toggleMicrophone}>
+          <button className="btn-mic" onClick={toggleMicrophone} disabled={callStatus !== CallStatus.ACTIVE}>
             <Image src={isMuted ? "/icons/mic-off.svg" : "/icons/mic-on.svg"} alt="mic" width={36} height={36} />
             <p className="max-sm:hidden">{isMuted ? "Turn on microphone" : "Turn off microphone"}</p>
           </button>
@@ -116,7 +125,23 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
         </div>
       </section>
       <section className="transcript">
-        <div className="transcript-message no-scrollbar">MESSAGE</div>
+        <div className="transcript-message no-scrollbar">
+          {messages.map((message, index) => {
+            if (message.role === "assistant") {
+              return (
+                <p key={index} className="max-sm:text-sm">
+                  {name.split(" ")[0].replace("/[.,]/g, ", "")}: {message.content}
+                </p>
+              );
+            } else {
+              return (
+                <p key={index} className="text-primary max-sm:text-sm">
+                  {userName}: {message.content}
+                </p>
+              );
+            }
+          })}
+        </div>
 
         <div className="transcript-fade" />
       </section>
